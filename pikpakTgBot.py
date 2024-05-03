@@ -969,6 +969,34 @@ def account_manage(update: Update, context: CallbackContext):
         context.bot.send_message(chat_id=update.effective_chat.id, text='不存在的命令语法！')
 
 
+# 切换下载路径
+def path_command(update: Update, context: CallbackContext):
+    argv = context.args  # 获取命令参数
+    global ARIA2_DOWNLOAD_PATH
+    
+    if len(argv) == 0:  # 直接/path则显示帮助
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text='【用法】\n'
+                                      '/path get\t获取当前下载路径\n'
+                                      '/path set [path]\t 设置新的下载路径\n',
+                                 parse_mode='Markdown')
+    
+    # 获取当前下载路径
+    if len(argv) == 1 and argv[0] == 'get':
+       
+        context.bot.send_message(chat_id=update.effective_chat.id, text=f'当前下载路径为:`{ARIA2_DOWNLOAD_PATH}`',
+                                                                            parse_mode='Markdown')
+    # 设置新的下载路径
+    if len(argv) == 2 and argv[0] == 'set':
+        path = argv[1]
+        ARIA2_DOWNLOAD_PATH = path
+        context.bot.send_message(chat_id=update.effective_chat.id, text=f'路径已设置为:`{path}`',
+                                                                            parse_mode='Markdown')
+        record_config()
+    logging.info(f'路径已设置为:{path}')
+
+
+
 '''
 # 想弃用/download命令
 # 下载账号下所有文件
@@ -1123,6 +1151,7 @@ start_handler = CommandHandler(['start', 'help'], start)
 pikpak_handler = CommandHandler('p', pikpak)
 clean_handler = CommandHandler(['clean', 'clear'], clean)
 account_handler = CommandHandler('account', account_manage)
+set_path_handler = CommandHandler('path', path_command)
 magnet_handler = MessageHandler(Filters.regex('^magnet:\?xt=urn:btih:[0-9a-fA-F]{40,}.*$'), pikpak)
 # download_handler = CommandHandler('download', download)  # download命令在pikpak命令健壮后将弃用
 
@@ -1133,6 +1162,7 @@ dispatcher.add_handler(start_handler)
 dispatcher.add_handler(magnet_handler)
 dispatcher.add_handler(pikpak_handler)
 dispatcher.add_handler(clean_handler)
+dispatcher.add_handler(set_path_handler)
 
 updater.start_polling()
 updater.idle()
